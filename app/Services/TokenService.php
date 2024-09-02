@@ -27,25 +27,13 @@ class TokenService
      * @param User $user
      * @return array
      */
-    public function generateTokens(User $user)
+      public function generateTokens(User $user)
     {
         // Définir l'expiration du token
         $expiresAt = Carbon::now()->addSeconds(config('auth.personal_access_token_expiration', 60));
     
-        // Générer le token d'accès avec les scopes définis
-        $tokenResult = $user->createToken('Personal Access Token', [
-            'user',
-            'role',
-        ]);
-    
-        // Ajouter toutes les informations de l'utilisateur comme un claim personnalisé
-        $token = $tokenResult->token;
-        $token->withClaims([
-            'user_data' => $user->toArray(),  // Transformer l'objet User en tableau
-        ]);
-        $token->save();
-    
-        $accessToken = $tokenResult->accessToken;
+    $tokenResult = $user->createToken('Personal Access Token');     
+       $accessToken = $tokenResult->accessToken;
     
         Log::info('Token generated', [
             'token' => $accessToken,
@@ -61,12 +49,11 @@ class TokenService
         Redis::expireat('refresh_token_' . $user->id, $expiresAt->timestamp);
     
         return [
-            'access_token' => $accessToken,
+            'access_token' => $accessToken, // Retourner la chaîne du token
             'refresh_token' => $refreshToken,
             'expires_at' => $expiresAt->toDateTimeString(),
         ];
     }
-    
 
     /**
      * Refresh the access token using a refresh token.
