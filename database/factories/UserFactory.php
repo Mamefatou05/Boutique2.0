@@ -1,66 +1,38 @@
 <?php
-
 namespace Database\Factories;
 
-use App\Enums\Role;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Faker\Generator as Faker;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
- */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
-    protected static ?string $password;
+    protected $model = User::class;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
-    public function definition(): array
+    public function definition()
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'login' => fake()->login(),
-            'password' => static::$password ??= ('password'),
-            'remember_token' => Str::random(10),
-            'role' =>fake()->role(), // Par défaut, le rôle est client.
+            'prenom' => $this->faker->firstName,
+            'nom' => $this->faker->lastName,
+            'email' => $this->faker->unique()->safeEmail,
+            'password' => $this->faker->password, // Utilisez Hash::make si vous voulez un mot de passe hashé
+            'role' => $this->faker->randomElement(['BOUTIQUIER', 'ADMIN']),
+            'login' => $this->faker->userName, // Utilisez un format valide
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
-    }
-      /**
-     * Indiquer que l'utilisateur est un admin.
-     */
-    public function admin(): self
+    public function admin()
     {
         return $this->state([
-            'role' => Role::ADMIN,
+            'role' => 'ADMIN',
         ]);
     }
 
-    /**
-     * Indiquer que l'utilisateur est un boutiquier.
-     */
-    public function boutiquier(): self
+    public function boutiquier()
     {
         return $this->state([
-            'role' => Role::BOUTIQUIER,
+            'role' => 'BOUTIQUIER',
         ]);
     }
 }

@@ -17,9 +17,8 @@ return new class extends Migration
             $table->id();
             $table->string('nom');
             $table->string('prenom');
-            $table->string('login');
             $table->string('role')->default(Role::CLIENT);
-            $table->string('email')->unique();
+            $table->string('login')->unique();
             $table->string('password');
             $table->timestamps();
         });

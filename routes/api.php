@@ -2,9 +2,11 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ArticleController;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -30,18 +32,32 @@ Route::get('v1/users/{id}', function (int $id) {
     return User::find($id);
 });
 
-Route::prefix('v1/users')->as('users.')->group(function () {
-    Route::get('/', [UserController::class, 'index'])->name('index');
-    Route::get('/{id}', [UserController::class, 'show'])->name('show');
-    Route::post('/', [UserController::class, 'store'])->name('store');
-    Route::patch('/{user}', [UserController::class, 'update'])->name('update');
-    Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
+
+Route::prefix('/v1')->group(function () {
+Route::post('login', [AuthController::class, 'login']);
+Route::post('register', [AuthController::class,'register']);
+Route::post('refresh', [AuthController::class,'refreshToken']);
+Route::post('logout', [AuthController::class, 'logout']);
 });
 
-Route::post('login', [AuthController::class, 'login']);
-
-Route::middleware('auth:api')->post('logout', [AuthController::class, 'logout']);
-
-Route::middleware(['auth:api', 'cache.headers:public;max_age=3600;etag'])->prefix('/v1')->group(function () {
+Route::middleware(['auth:api'])->prefix('/v1')->group(function () {
     Route::resource('clients', ClientController::class);
+    Route::get('clients/{id}/dettes', [ClientController::class, 'showDettes'])->name('clients.showDettes');
+    Route::get('clients/{id}/user', [ClientController::class, 'showUser'])->name('clients.showUser');
+
+});
+Route::middleware([  'auth:api',])->prefix('/v1')->group(function () {
+    Route::resource('users', UserController::class);
+    Route::get('register', [UserController::class,'register'])->name('users.register');
+
+});
+
+
+
+
+Route::middleware([ 'auth:api'])->prefix('v1')->group(function () {
+    Route::apiResource('articles', ArticleController::class);
+    Route::post('articles/stock', [ArticleController::class, 'updateStock']);
+    Route::post('articles/libelle', [ArticleController::class, 'searchByLibelle']);
+
 });

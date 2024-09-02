@@ -1,36 +1,70 @@
 <?php
-namespace App\Http\Controllers;
+
 namespace App\Http\Controllers;
 
+namespace App\Http\Controllers;
+
+use App\Enums\Role;
+use App\Enums\StatutEnum;
+use App\Helpers\SendResponse;
+use App\Http\Requests\RegisterRequest;
+use App\Http\Resources\UserResource;
+use App\Models\Client;
 use App\Models\User;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Laravel\Sanctum\HasApiTokens;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\QueryBuilder;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
+
 
 class UserController extends Controller
 {
-    use HasApiTokens, Notifiable;
-
-
-    // Liste tous les utilisateurs
-    public function index(): JsonResponse
+    public function __construct()
     {
-        $users = User::all();
-        
-        // Ajout des liens HATEOAS si nécessaire
-        $users->each(function ($user) {
-            $user->links = [
-                'self' => route('users.show', ['id' => $user->id]),
-                'update' => route('users.update', ['user' => $user->id]),
-                'delete' => route('users.destroy', ['user' => $user->id]),
-            ];
+        $this->authorizeResource(User::class, 'user');
+    }
+
+
+    
+    // Liste tous les utilisateurs
+    public function index(Request $request)
+    {
+        // Générer une clé de cache unique basée sur les paramètres de la requête
+        $cacheKey = 'users_' . md5(serialize($request->all()));
+
+        // Récupérer les données du cache si elles existent
+        $users = Cache::remember($cacheKey, 3600, function () use ($request) {
+            $query = QueryBuilder::for(User::class)
+            ->allowedFilters([
+                AllowedFilter::scope('active'),
+                AllowedFilter::scope('role'),
+            ])
+            ->allowedSorts('created_at');
+            
+            // if ($request->has('role')) {
+            //     $query->role($request->input('role'));
+            // }
+
+            // if ($request->has('active')) {
+            //     $query->active($request->input('active'));
+            // }
+
+            return $query->paginate(10);
         });
 
-        // Passer `links` seulement s'il y en a
-        return $this->jsonResponse($users, 200, 'Users retrieved successfully', $users->first()->links ?? []);
+        return SendResponse::jsonResponse(
+            UserResource::collection($users),
+            HttpResponse::HTTP_OK,
+            StatutEnum::SUCCESS,
+            'Users retrieved successfully'
+        );
     }
 
     // Affiche un utilisateur spécifique
@@ -58,8 +92,8 @@ class UserController extends Controller
         $validator = Validator::make($request->all(), [
             'nom' => 'required|string|max:255',
             'prenom' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
+            'login' => 'required|string|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
             'role' => 'required|string',
         ]);
 
@@ -68,10 +102,15 @@ class UserController extends Controller
         }
 
         $user = User::create($request->only([
-            "nom", "prenom", "email", "password", "role" , "login"
+            "nom",
+            "prenom",
+            "password",
+            "role",
+            "login"
         ]));
 
         Log::info('Created User:', $user->toArray());
+
 
 
         // Pas de liens nécessaires ici
@@ -93,7 +132,7 @@ class UserController extends Controller
             return $this->jsonResponse($validator->errors(), 422, "Validation Error");
         }
 
-        $user->update($request->only(["nom", "prenom", "email", "password", "role" , "login"]));
+        $user->update($request->only(["nom", "prenom", "email", "password", "role", "login"]));
 
         // Pas de liens nécessaires ici
         return $this->jsonResponse($user, 200, "User updated successfully");

@@ -38,11 +38,10 @@ return [
     'web' => [
         'driver' => 'session',
         'provider' => 'users',
-
     ],
 
     'api' => [
-        'driver' => 'passport',
+        'driver' => 'passport', //update this line
         'provider' => 'users',
     ],
 ],
@@ -63,19 +62,12 @@ return [
     | Supported: "database", "eloquent"
     |
     */
-
-    'providers' => [
-        'users' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\User::class,
-        ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+'providers' => [
+    'users' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\User::class,
     ],
-
+],
     /*
     |--------------------------------------------------------------------------
     | Resetting Passwords

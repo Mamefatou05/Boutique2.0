@@ -14,19 +14,22 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => ['required', 'confirmed', new PasswordRule],
+            'nom' => 'required|string|max:255',
+            'prenom' => 'required|string|max:255',
+            'login' => ['required','string','max:255', 'unique:users'],
+            'password' => ['required', new PasswordRule,'confirmed'],
+            'clientid' => 'required|exists:clients,id'  // Vérifie si le clientid existe dans la table clients
         ];
     }
 
     public function messages(): array
     {
         return [
-            'name.required' => 'Le nom est obligatoire.',
-            'email.required' => 'L\'email est obligatoire.',
-            'email.unique' => 'Cet email est déjà utilisé.',
+            'nom.required' => 'Le nom est obligatoire.',
+            'prenom.required' => 'Le prenom est obligatoire.',
+            'login.unique' => 'Cet login est déjà utilisé.',
             'password.required' => 'Le mot de passe est obligatoire.',
+            'password.confirmed' => 'Les mots de passe ne correspondent pas.'
         ];
     }
 }

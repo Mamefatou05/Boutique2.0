@@ -18,8 +18,7 @@ class ClientFactory extends Factory
     public function definition()
     {
         return [
-            'nom' => fake()->firstName(),
-            'prenom' => fake()->lastName(),
+            'surname' => fake()->name(),
             'telephone' => fake()->regexify('(77|78|76)[0-9]{7}'),
             'adresse' => fake()->address(),
                 ];

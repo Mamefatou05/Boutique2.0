@@ -2,20 +2,20 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
-use Tymon\JWTAuth\Contracts\JWTSubject;
+use Laravel\Passport\HasApiTokens;
 
-class User extends Authenticatable implements JWTSubject
+class User extends Authenticatable
 {
-    use HasApiTokens, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
         'nom',
         'prenom',
         'login',
-        'email',
         'password',
         'role'
     ];
@@ -30,25 +30,29 @@ class User extends Authenticatable implements JWTSubject
         'password' => 'hashed',
     ];
 
-    // Implémentation des méthodes JWTSubject
+    public function scopeActive($query, $value)
+    {
+        if ($value === 'oui') {
+            return $query->where('active', 1);
+        } elseif ($value === 'non') {
+            return $query->where('active', 0);
+        }
+
+        return $query;
+    }
+
+    public function scopeRole($query, $role)
+{
+    return $query->where('role', $role);
+}
 
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.
      *
      * @return mixed
      */
-    public function getJWTIdentifier()
+    public function client(): HasOne
     {
-        return $this->getKey();
-    }
-
-    /**
-     * Return a key value array, containing any custom claims to be added to the JWT.
-     *
-     * @return array
-     */
-    public function getJWTCustomClaims()
-    {
-        return [];
+        return $this->hasOne(User::class, 'id', 'user_id');
     }
 }

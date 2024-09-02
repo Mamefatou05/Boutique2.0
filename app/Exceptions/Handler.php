@@ -1,31 +1,27 @@
 <?php
 namespace App\Exceptions;
 
+use App\Helpers\SendResponse;
+use App\Enums\StatutEnum;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use League\OAuth2\Server\Exception\OAuthServerException; // Ajout de l'import nécessaire
+use Illuminate\Http\JsonResponse;
+
 use Throwable;
 
 class Handler extends ExceptionHandler
 {
-    /**
-     * The list of the inputs that are never flashed to the session on validation exceptions.
-     *
-     * @var array<int, string>
-     */
     protected $dontFlash = [
         'current_password',
         'password',
         'password_confirmation',
     ];
 
-    /**
-     * Register the exception handling callbacks for the application.
-     */
     public function register(): void
     {
         $this->reportable(function (Throwable $e) {
@@ -33,65 +29,74 @@ class Handler extends ExceptionHandler
         });
     }
 
-    /**
-     * Render an exception into an HTTP response.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Throwable  $exception
-     * @return \Illuminate\Http\JsonResponse
-     */
+    public function report(Throwable $exception): void
+    {
+        // Kill reporting if this is an "access denied" (code 9) OAuthServerException.
+        if ($exception instanceof OAuthServerException && $exception->getCode() == 9) {
+            return;
+        }
+
+        parent::report($exception);
+    }
+
     public function render($request, Throwable $exception): JsonResponse
     {
         // Handle JWT related exceptions
         if ($exception instanceof JWTException) {
-            return response()->json([
-                'status' => 401,
-                'message' => 'JWT error: ' . $exception->getMessage(),
-                'data' => null,
-            ], 401);
+            return SendResponse::jsonResponse(
+                null,
+                401,
+                StatutEnum::FAILURE,
+                'JWT error: ' . $exception->getMessage()
+            );
         }
 
         // Handle validation exceptions
         if ($exception instanceof ValidationException) {
-            return response()->json([
-                'status' => 422,
-                'message' => 'Validation error',
-                'data' => $exception->errors(),
-            ], 422);
+            return SendResponse::jsonResponse(
+                $exception->errors(),
+                422,
+                StatutEnum::FAILURE,
+                'Validation error'
+            );
         }
 
         // Handle model not found exceptions
         if ($exception instanceof ModelNotFoundException) {
-            return response()->json([
-                'status' => 404,
-                'message' => 'Resource not found',
-                'data' => null,
-            ], 404);
+            return SendResponse::jsonResponse(
+                null,
+                404,
+                StatutEnum::FAILURE,
+                'Resource not found'
+            );
         }
 
         // Handle not found HTTP exceptions
         if ($exception instanceof NotFoundHttpException) {
-            return response()->json([
-                'status' => 404,
-                'message' => 'Resource not found',
-                'data' => null,
-            ], 404);
+            return SendResponse::jsonResponse(
+                null,
+                404,
+                StatutEnum::FAILURE,
+                'Resource not found'
+            );
         }
 
         // Handle method not allowed HTTP exceptions
         if ($exception instanceof MethodNotAllowedHttpException) {
-            return response()->json([
-                'status' => 405,
-                'message' => 'Method not allowed',
-                'data' => null,
-            ], 405);
+            return SendResponse::jsonResponse(
+                null,
+                405,
+                StatutEnum::FAILURE,
+                'Method not allowed'
+            );
         }
-
+        
         // Handle other exceptions
-        return response()->json([
-            'status' => 500,
-            'message' => 'An unexpected error occurred',
-            'data' => null,
-        ], 500);
+        return SendResponse::jsonResponse(
+            null,
+            500,
+            StatutEnum::FAILURE,
+            'An unexpected error occurred'
+        );
     }
 }
