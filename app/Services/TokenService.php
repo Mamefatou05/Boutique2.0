@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use Carbon\Carbon;
@@ -30,16 +31,22 @@ class TokenService
     {
         // Définir l'expiration du token
         $expiresAt = Carbon::now()->addSecond(config('auth.personal_access_token_expiration', 60));
-    
-        // Générer le token d'accès
-        $tokenResult = $user->createToken('Personal Access Token');
-        $accessToken = $tokenResult->accessToken; // Utiliser plainTextToken pour obtenir le token en chaîne
-    
+
+        // Générer le token d'accès avec les informations personnalisées
+        // Generate the access token with custom claims
+        $tokenResult = $user->createToken('Personal Access Token', ['*'], function ($token) use ($user) {
+            $token->claims([
+                'user_id' => $user->id,
+                'role' => $user->role->name,
+            ]);
+        });
+        $accessToken = $tokenResult->accessToken;
+
         Log::info('Token generated', [
             'token' => $accessToken,
             'expires_at' => $expiresAt->toDateTimeString(),
         ]);
-    
+
         // Stocker le refresh token dans Redis
         $refreshToken = Str::random(64);
         Redis::set('refresh_token_' . $user->id, json_encode([
@@ -47,14 +54,14 @@ class TokenService
             'expires_at' => $expiresAt->timestamp,
         ]));
         Redis::expireat('refresh_token_' . $user->id, $expiresAt->timestamp);
-    
+
         return [
             'access_token' => $accessToken, // Retourner la chaîne du token
             'refresh_token' => $refreshToken,
             'expires_at' => $expiresAt->toDateTimeString(),
         ];
     }
-    
+
 
     /**
      * Refresh the access token using a refresh token.
@@ -66,20 +73,20 @@ class TokenService
     {
         try {
             $userId = $this->getUserIdByRefreshToken($refreshToken);
-    
+
             if (!$userId) {
                 return response()->json(['message' => 'Invalid refresh token'], 401);
             }
-    
+
             $user = User::find($userId);
-    
+
             if (!$user) {
                 return response()->json(['message' => 'User not found'], 404);
             }
-    
+
             // Révoquer les anciens tokens
             $this->revokeTokensByUserId($userId);
-    
+
             // Générer de nouveaux tokens
             return $this->generateTokens($user);
         } catch (\Exception $e) {
@@ -87,7 +94,7 @@ class TokenService
             return response()->json(['message' => 'Unable to refresh token'], 500);
         }
     }
-    
+
     /**
      * Get user ID by refresh token.
      *
@@ -98,26 +105,26 @@ class TokenService
     {
         // Debugging output to ensure the correct token is received
         Log::info('Received refresh token: ' . $refreshToken);
-        
+
         // Retrieve all keys that match the pattern
         $redis = Redis::connection();
         $keys = Redis::keys('laravel_database_refresh_token_*');
-      
-                dd($keys);
-        
+
+        dd($keys);
+
         Log::info('Keys found in Redis: ' . print_r($keys, true));
-        
+
         foreach ($keys as $key) {
             // Get the stored token JSON string
             $storedTokenJson = Redis::get($key);
             Log::info('Stored token for key ' . $key . ': ' . $storedTokenJson);
-    
+
             // Decode the JSON string
             $storedToken = json_decode($storedTokenJson, true);
-            
+
             // Debugging output to see the decoded array
             Log::info('Decoded stored token: ' . print_r($storedToken, true));
-    
+
             // Compare the stored token with the given refresh token
             if (is_array($storedToken) && isset($storedToken['token']) && $storedToken['token'] === $refreshToken) {
                 $userId = str_replace('laravel_database_refresh_token_', '', $key);
@@ -125,14 +132,14 @@ class TokenService
                 return (int)$userId;
             }
         }
-        
+
         Log::error('Refresh token not found');
         return null;
     }
-    
-    
 
-    
+
+
+
     /**
      * Revoke all tokens by user ID.
      *
@@ -143,7 +150,7 @@ class TokenService
         try {
             // Supprimer le refresh token de Redis
             Redis::del('refresh_token_' . $userId);
-    
+
             // Révoquer tous les tokens d'accès
             $tokens = $this->tokenRepository->forUser($userId);
             foreach ($tokens as $token) {

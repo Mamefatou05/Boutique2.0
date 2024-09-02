@@ -97,52 +97,53 @@ class UserController extends Controller
             'login' => 'required|string|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|string',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Ajout de la validation pour la photo
         ]);
     
         if ($validator->fails()) {
             return $this->jsonResponse($validator->errors(), 422, "Validation Error");
         }
     
-        // Démarrer la transaction
         DB::beginTransaction();
     
         try {
-            // Extraire le rôle depuis la requête
             $roleName = $request->input('role');
-    
-            // Vérifier si le rôle existe ou le créer
             $role = ModelsRole::firstOrCreate(['name' => $roleName]);
     
-            // Créer l'utilisateur avec l'ID du rôle
+            // Initialisation du chemin de la photo
+            $photoPath = null;
+    
+            if ($request->hasFile('photo')) {
+                // Sauvegarder la photo dans le répertoire public/storage
+                $photoPath = $request->file('photo')->store('photos', 'public');
+            }
+    
             $user = User::create([
                 'nom' => $request->input('nom'),
                 'prenom' => $request->input('prenom'),
                 'login' => $request->input('login'),
                 'password' => $request->input('password'),
-                'role_id' => $role->id, // Utilisez l'ID du rôle au lieu du nom
+                'role_id' => $role->id,
+                'photo' => $photoPath, // Sauvegarde du chemin de la photo dans la base de données
             ]);
     
             Log::info('Created User:', $user->toArray());
     
-            // Commit la transaction
             DB::commit();
     
-            // Réponse succès
             return $this->jsonResponse($user, 201, "User created successfully");
     
         } catch (\Exception $e) {
-            // Rollback la transaction en cas d'erreur
             DB::rollBack();
     
-            // Réponse erreur
             return $this->jsonResponse(
                 ['message' => $e->getMessage()],
                 500,
                 "Failed to create user"
             );
         }
-
-    }    
+    }
+    
 
     // Met à jour un utilisateur existant
     public function update(Request $request, User $user): JsonResponse

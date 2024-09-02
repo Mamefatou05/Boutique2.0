@@ -37,6 +37,7 @@ class ClientController extends Controller
      */
     public function index(Request $request)
     {
+
         // Générer une clé de cache unique basée sur les paramètres de la requête
         $cacheKey = 'clients_' . md5(serialize($request->all()));
 
@@ -44,7 +45,7 @@ class ClientController extends Controller
        $clients = Cache::remember($cacheKey, 3600, function () use ($request) {
         return QueryBuilder::for(Client::class)
             ->allowedFilters([
-                AllowedFilter::exact('telephone'),
+                AllowedFilter::scope('telephone'),
                 AllowedFilter::scope('compte'),
                 AllowedFilter::scope('active'),
             ])
@@ -150,9 +151,16 @@ class ClientController extends Controller
             if (isset($validated['user'])) {
                 // Extraire les données utilisateur depuis les données validées
                 $userData = $validated['user'];
-    
+                  // Initialisation du chemin de la photo
+                 $photoPath = null;
                 // Vérifier si le rôle existe ou le créer
                 $role = ModelsRole::firstOrCreate(['name' => $userData['role']]);
+
+                if ($request->hasFile('photo')) {
+                    // Sauvegarder la photo dans le répertoire public/storage
+                    $photoPath = $request->file('photo')->store('photos', 'public');
+                }
+        
     
                 // Créer un nouvel utilisateur avec les données extraites
                 $user = User::create([
@@ -161,6 +169,7 @@ class ClientController extends Controller
                     'login' => $userData['login'],
                     'password' => bcrypt($userData['password']),
                     'role_id' => $role->id,
+                    'photo' => $photoPath
                 ]);
             }
     

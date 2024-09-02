@@ -16,7 +16,7 @@ class ClientPolicy
      */
     public function view(User $user, Client $client)
     {
-        return $user->role === 'BOUTIQUIER'; 
+        return $user->role->name === 'BOUTIQUIER'; 
     }
 
     /**
@@ -24,7 +24,7 @@ class ClientPolicy
      */
     public function create(User $user)
     {
-        return $user->role === 'BOUTIQUIER'; 
+        return $user->role->name === 'BOUTIQUIER'; 
     }
 
     /**
@@ -32,7 +32,7 @@ class ClientPolicy
      */
     public function update(User $user, Client $client)
     {
-        return $user->role === 'BOUTIQUIER';
+        return $user->role->name === 'BOUTIQUIER';
     }
 
     /**
@@ -40,11 +40,11 @@ class ClientPolicy
      */
     public function delete(User $user, Client $client)
     {
-        return $user->role === 'BOUTIQUIER';
+        return $user->role->name === 'BOUTIQUIER';
     }
     public function viewAny(User $user)
     {
-        return $user->role === 'BOUTIQUIER';
+        return $user->role->name === 'BOUTIQUIER';
     }
     
 }

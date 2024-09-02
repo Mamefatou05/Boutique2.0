@@ -18,7 +18,7 @@ class UserPolicy
      */
     private function isAdmin(User $user): bool
     {
-        return $user->role === Role::ADMIN;
+        return $user->role->name === Role::ADMIN;
     }
 
     /**
@@ -81,6 +81,6 @@ class UserPolicy
 
     public function register(User $user): bool
     {
-        return $user->role === Role::BOUTIQUIER;
+        return $user->role->name === Role::BOUTIQUIER;
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
+use App\Models\Role as ModelsRole;
 
 class User extends Authenticatable
 {
@@ -42,10 +43,15 @@ class User extends Authenticatable
         return $query;
     }
 
-    public function scopeRole($query, $role)
-{
-    return $query->where('role', $role);
-}
+    public function scopeRole($query, $roleName)
+    {
+        // Récupérer l'ID du rôle en utilisant le nom du rôle
+        $roleId = ModelsRole::where('name', $roleName)->pluck('id')->first();
+    
+        // Filtrer les utilisateurs en fonction de l'ID du rôle
+        return $query->where('role_id', $roleId);
+    }
+    
 
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.

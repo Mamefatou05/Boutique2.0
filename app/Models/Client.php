@@ -45,6 +45,13 @@ class Client extends Model
           return $query;
       }
   
+      // Scope pour filtrer les clients par téléphone
+      public function scopeTelephone($query, $value)
+      {
+          return $query->where('telephone', 'LIKE', '%'.$value.'%');
+      }
+      
+
       // Scope pour filtrer les clients actifs ou inactifs
       public function scopeActive($query, $value)
       {
