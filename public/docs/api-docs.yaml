@@ -155,7 +155,7 @@ components:
           type: string
         
 
-   UpdateStockRequest:
+    UpdateStockRequest:
       type: object
       properties:
         updated_articles:
