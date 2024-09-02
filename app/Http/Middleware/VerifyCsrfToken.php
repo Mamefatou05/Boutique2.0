@@ -12,6 +12,6 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        //
+        'wane/v1/*', // Exclut toutes les routes API du CSRF
     ];
 }

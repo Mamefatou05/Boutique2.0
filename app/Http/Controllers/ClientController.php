@@ -15,6 +15,7 @@ use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use App\Http\Resources\ClientCollection;
 use App\Http\Resources\ClientResource;
+use App\Models\Role as ModelsRole;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -137,29 +138,32 @@ class ClientController extends Controller
     {
         // Commencer la transaction
         DB::beginTransaction();
-
+    
         try {
-            // Initialiser les données de l'utilisateur
-            $user = null;
-
             // Extraire les données validées de la requête
             $validated = $request->validated();
-
-            // Vérifier si les données de l'utilisateur sont présentes
+    
+            // Initialiser l'utilisateur
+            $user = null;
+    
+            // Vérifier si les données utilisateur sont présentes
             if (isset($validated['user'])) {
                 // Extraire les données utilisateur depuis les données validées
                 $userData = $validated['user'];
-
+    
+                // Vérifier si le rôle existe ou le créer
+                $role = ModelsRole::firstOrCreate(['name' => $userData['role']]);
+    
                 // Créer un nouvel utilisateur avec les données extraites
                 $user = User::create([
                     'nom' => $userData['nom'],
                     'prenom' => $userData['prenom'],
                     'login' => $userData['login'],
-                    'password' => $userData['password'],
-                    'role' => Role::CLIENT,
+                    'password' => bcrypt($userData['password']),
+                    'role_id' => $role->id,
                 ]);
             }
-
+    
             // Créer le client
             $client = new Client([
                 'telephone' => $validated['telephone'],
@@ -167,21 +171,21 @@ class ClientController extends Controller
                 'surname' => $validated['surname'],
                 'active' => $validated['active'] ?? 0, // Assurez-vous que 'active' est défini, par défaut à 0
             ]);
-
+    
             // Associer le client à l'utilisateur s'il existe
             if ($user) {
                 $client->user()->associate($user);
             }
-
+    
             // Sauvegarder le client
             $client->save();
-
+    
             // Commit la transaction
             DB::commit();
-
+    
             // Utiliser ClientResource pour transformer le modèle en une réponse formatée
             $clientResource = new ClientResource($client);
-
+    
             // Passer la ressource à SendResponse
             return SendResponse::jsonResponse(
                 $clientResource->resolve(), // Utilisez `resolve()` pour obtenir les données du modèle
@@ -189,11 +193,11 @@ class ClientController extends Controller
                 StatutEnum::SUCCESS,
                 'Client created successfully',
             );
-
+    
         } catch (\Exception $e) {
             // Rollback la transaction en cas d'erreur
             DB::rollBack();
-
+    
             // Utiliser SendResponse pour gérer les erreurs
             return SendResponse::jsonResponse(
                 null,
@@ -203,7 +207,6 @@ class ClientController extends Controller
             );
         }
     }
-
     /**
      * Mettre à jour un client existant.
      *

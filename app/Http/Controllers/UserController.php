@@ -11,6 +11,8 @@ use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Client;
 use App\Models\User;
+use App\Models\Role as ModelsRole;
+
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -96,26 +98,51 @@ class UserController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|string',
         ]);
-
+    
         if ($validator->fails()) {
             return $this->jsonResponse($validator->errors(), 422, "Validation Error");
         }
+    
+        // Démarrer la transaction
+        DB::beginTransaction();
+    
+        try {
+            // Extraire le rôle depuis la requête
+            $roleName = $request->input('role');
+    
+            // Vérifier si le rôle existe ou le créer
+            $role = ModelsRole::firstOrCreate(['name' => $roleName]);
+    
+            // Créer l'utilisateur avec l'ID du rôle
+            $user = User::create([
+                'nom' => $request->input('nom'),
+                'prenom' => $request->input('prenom'),
+                'login' => $request->input('login'),
+                'password' => $request->input('password'),
+                'role_id' => $role->id, // Utilisez l'ID du rôle au lieu du nom
+            ]);
+    
+            Log::info('Created User:', $user->toArray());
+    
+            // Commit la transaction
+            DB::commit();
+    
+            // Réponse succès
+            return $this->jsonResponse($user, 201, "User created successfully");
+    
+        } catch (\Exception $e) {
+            // Rollback la transaction en cas d'erreur
+            DB::rollBack();
+    
+            // Réponse erreur
+            return $this->jsonResponse(
+                ['message' => $e->getMessage()],
+                500,
+                "Failed to create user"
+            );
+        }
 
-        $user = User::create($request->only([
-            "nom",
-            "prenom",
-            "password",
-            "role",
-            "login"
-        ]));
-
-        Log::info('Created User:', $user->toArray());
-
-
-
-        // Pas de liens nécessaires ici
-        return $this->jsonResponse($user, 201, "User created successfully");
-    }
+    }    
 
     // Met à jour un utilisateur existant
     public function update(Request $request, User $user): JsonResponse

@@ -11,6 +11,8 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Models\Client;
 use App\Models\User;
+
+use App\Models\Role as ModelsRole;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Services\TokenService;
@@ -32,6 +34,7 @@ class AuthController extends Controller
     public function login(LoginRequest $request): JsonResponse
     {
         Log::info('Login Request Data:', $request->all());
+        
     
         $credentials = $request->validated();
     
@@ -57,27 +60,32 @@ class AuthController extends Controller
     
     public function register(RegisterRequest $request): JsonResponse
     {
+        Log::info('Login Request Data:', $request->all());
+
         // Démarrer la transaction
         DB::beginTransaction();
-
+    
         try {
+            // Vérifier si le rôle existe ou le créer
+            $role = ModelsRole::firstOrCreate(['name' => Role::CLIENT]);
+    
             // Créer un utilisateur
             $user = User::create([
                 'login' => $request->input('login'),
-                'password' =>$request->input('password'),
+                'password' => bcrypt($request->input('password')),
                 'nom' => $request->input('nom'),
                 'prenom' => $request->input('prenom'),
-                'role' => Role::CLIENT,
+                'role_id' => $role->id,
             ]);
-
+    
             // Mettre à jour le client avec le user_id
             $client = Client::find($request->input('clientid'));
             $client->user_id = $user->id;
             $client->save();
-
+    
             // Commit transaction
             DB::commit();
-
+    
             // Réponse succès
             return SendResponse::jsonResponse(
                 [
@@ -91,7 +99,7 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             // Rollback transaction en cas d'erreur
             DB::rollBack();
-
+    
             // Réponse erreur
             return SendResponse::jsonResponse(
                 [
@@ -103,6 +111,7 @@ class AuthController extends Controller
             );
         }
     }
+    
     
 
     public function refreshToken(Request $request): JsonResponse
