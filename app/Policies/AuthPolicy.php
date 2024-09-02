@@ -19,6 +19,6 @@ class AuthPolicy
 
     public function register(User $user): bool
     {
-        return $user->role === Role::BOUTIQUIER;
+        return $user->role->name === Role::BOUTIQUIER;
     }
 }

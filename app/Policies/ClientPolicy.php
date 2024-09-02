@@ -3,6 +3,7 @@
 
 namespace App\Policies;
 
+use App\Enums\Role;
 use App\Models\User;
 use App\Models\Client;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -46,5 +47,16 @@ class ClientPolicy
     {
         return $user->role->name === 'BOUTIQUIER';
     }
+    public function viewDette(User $user, Client $client)
+    {
+        return $user->role->name === Role::BOUTIQUIER || $user->id === $client->id;
+    }
+    
+    public function viewUser(User $user, Client $client)
+    {
+        return $user->role->name === Role::BOUTIQUIER || $user->id === $client->id;
+    }
+    
+
     
 }
