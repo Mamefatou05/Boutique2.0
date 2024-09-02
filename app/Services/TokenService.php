@@ -30,23 +30,28 @@ class TokenService
     public function generateTokens(User $user)
     {
         // Définir l'expiration du token
-        $expiresAt = Carbon::now()->addSecond(config('auth.personal_access_token_expiration', 60));
-
-        // Générer le token d'accès avec les informations personnalisées
-        // Generate the access token with custom claims
-        $tokenResult = $user->createToken('Personal Access Token', ['*'], function ($token) use ($user) {
-            $token->claims([
-                'user_id' => $user->id,
-                'role' => $user->role->name,
-            ]);
-        });
+        $expiresAt = Carbon::now()->addSeconds(config('auth.personal_access_token_expiration', 60));
+    
+        // Générer le token d'accès avec les scopes définis
+        $tokenResult = $user->createToken('Personal Access Token', [
+            'user',
+            'role',
+        ]);
+    
+        // Ajouter toutes les informations de l'utilisateur comme un claim personnalisé
+        $token = $tokenResult->token;
+        $token->withClaims([
+            'user_data' => $user->toArray(),  // Transformer l'objet User en tableau
+        ]);
+        $token->save();
+    
         $accessToken = $tokenResult->accessToken;
-
+    
         Log::info('Token generated', [
             'token' => $accessToken,
             'expires_at' => $expiresAt->toDateTimeString(),
         ]);
-
+    
         // Stocker le refresh token dans Redis
         $refreshToken = Str::random(64);
         Redis::set('refresh_token_' . $user->id, json_encode([
@@ -54,14 +59,14 @@ class TokenService
             'expires_at' => $expiresAt->timestamp,
         ]));
         Redis::expireat('refresh_token_' . $user->id, $expiresAt->timestamp);
-
+    
         return [
-            'access_token' => $accessToken, // Retourner la chaîne du token
+            'access_token' => $accessToken,
             'refresh_token' => $refreshToken,
             'expires_at' => $expiresAt->toDateTimeString(),
         ];
     }
-
+    
 
     /**
      * Refresh the access token using a refresh token.

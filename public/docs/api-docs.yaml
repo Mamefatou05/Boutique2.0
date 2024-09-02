@@ -16,24 +16,87 @@ components:
       bearer: 
 
   schemas:
+    schemas:
+    Client:
+      type: object
+      properties:
+        id:
+          type: integer
+        telephone:
+          type: string
+        address:
+          type: string
+        surname:
+          type: string
+        active:
+          type: boolean
+        user:
+          $ref: '#/components/schemas/User'
+        dettes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Dette'
+    
     User:
       type: object
       properties:
         id:
           type: integer
-        name:
+        nom:
           type: string
-        email:
+        prenom:
           type: string
-          format: email
-        role:
+        login:
           type: string
-        created_at:
+        role_id:
+          type: integer
+        photo:
           type: string
-          format: date-time
-        updated_at:
+
+    
+    Dette:
+      type: object
+      properties:
+        id:
+          type: integer
+        montant:
+          type: number
+        statut:
           type: string
-          format: date-time
+
+    StoreClientRequest:
+      type: object
+      properties:
+        telephone:
+          type: string
+        address:
+          type: string
+        surname:
+          type: string
+        active:
+          type: boolean
+        user:
+          $ref: '#/components/schemas/User'
+
+    UpdateClientRequest:
+      type: object
+      properties:
+        telephone:
+          type: string
+        address:
+          type: string
+        surname:
+          type: string
+        active:
+          type: boolean
+        user:
+          $ref: '#/components/schemas/User'
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
 
     RegisterUserRequest:
       type: object
@@ -67,6 +130,74 @@ components:
       properties:
         token:
           type: string
+
+    Article:
+      type: object
+      properties:
+        id:
+          type: integer
+        libelle:
+          type: string
+        price:
+          type: float
+        
+
+    StoreArticleRequest:
+      type: object
+      properties:
+        libelle:
+          type: string
+
+    ArticleUpdateRequest:
+      type: object
+      properties:
+        libelle:
+          type: string
+        
+
+   UpdateStockRequest:
+      type: object
+      properties:
+        updated_articles:
+          type: array
+          items:
+            type: object
+            properties:
+              article_id:
+                type: integer
+              qte:
+                type: integer
+      required:
+        - updated_articles
+      
+
+    ClientDettes:
+      type: object
+      properties:
+        id:
+          type: integer
+        amount:
+          type: number
+          format: float
+        due_date:
+          type: string
+          format: date
+        status:
+          type: string
+
+    ClientUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        telephone:
+          type: string
+        address:
+          type: string
+        surname:
+          type: string
+        active:
+          type: boolean      
 
   responses:
     UnauthorizedError:
@@ -127,21 +258,88 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
 
 
+  /users:
+    get:
+      summary: Liste tous les utilisateurs
+      tags:
+        - Users
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+          description: Filtrer les utilisateurs par rôle
+        - in: query
+          name: active
+          schema:
+            type: boolean
+          description: Filtrer les utilisateurs par statut actif
+      responses:
+        '200':
+          description: Liste des utilisateurs récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  links:
+                    type: object
+                  meta:
+                    type: object
+        '500':
+          description: Erreur serveur
+    post:
+      summary: Crée un nouvel utilisateur
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nom:
+                  type: string
+                prenom:
+                  type: string
+                login:
+                  type: string
+                password:
+                  type: string
+                role:
+                  type: string
+                photo:
+                  type: string
+                  format: file
+      responses:
+        '201':
+          description: Utilisateur créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '422':
+          description: Erreur de validation
+        '500':
+          description: Erreur serveur
+
   /users/{id}:
     get:
-      summary: Récupérer les informations d'un utilisateur spécifique
-      operationId: getUser
+      summary: Affiche un utilisateur spécifique
       tags:
-        - Utilisateurs
-      security:
-        - BearerAuth: []
+        - Users
       parameters:
         - in: path
           name: id
           required: true
           schema:
             type: integer
-          description: ID de l'utilisateur à afficher
+          description: ID de l'utilisateur
       responses:
         '200':
           description: Utilisateur récupéré avec succès
@@ -151,8 +349,58 @@ paths:
                 $ref: '#/components/schemas/User'
         '404':
           description: Utilisateur non trouvé
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
+    put:
+      summary: Met à jour un utilisateur existant
+      tags:
+        - Users
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID de l'utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nom:
+                  type: string
+                prenom:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                role:
+                  type: string
+      responses:
+        '200':
+          description: Utilisateur mis à jour avec succès
+        '404':
+          description: Utilisateur non trouvé
+        '422':
+          description: Erreur de validation
+    delete:
+      summary: Supprime un utilisateur
+      tags:
+        - Users
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID de l'utilisateur
+      responses:
+        '204':
+          description: Utilisateur supprimé avec succès
+        '404':
+          description: Utilisateur non trouvé
+  
 
   /articles:
     get:
@@ -342,3 +590,209 @@ paths:
           description: Erreur interne du serveur
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+  /clients:
+    get:
+      summary: Lister les clients
+      description: Lister les clients avec filtrage, tri et pagination.
+      tags:
+        - Clients
+      parameters:
+        - name: telephone
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filtrer par téléphone
+        - name: compte
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filtrer par compte
+        - name: active
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Filtrer par état actif/inactif
+      responses:
+        '200':
+          description: Liste des clients récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Client'
+
+    post:
+      summary: Créer un nouveau client
+      description: Créer un nouveau client avec les informations fournies.
+      tags:
+        - Clients
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreClientRequest'
+      responses:
+        '201':
+          description: Client créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'              
+
+  /clients/{id}:
+    get:
+      summary: Afficher les détails d'un client
+      description: Afficher les détails d'un client spécifique.
+      tags:
+        - Clients
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID du client
+      responses:
+        '200':
+          description: Détails du client récupérés avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '404':
+          description: Client non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Mettre à jour un client
+      description: Mettre à jour les informations d'un client existant.
+      tags:
+        - Clients
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID du client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateClientRequest'
+      responses:
+        '200':
+          description: Client mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '404':
+          description: Client non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Supprimer un client
+      description: Supprimer un client existant.
+      tags:
+        - Clients
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID du client
+      responses:
+        '204':
+          description: Client supprimé avec succès
+        '404':
+          description: Client non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+  /clients/{id}/dettes:
+    get:
+      summary: Afficher les dettes d'un client
+      description: Afficher les dettes associées à un client spécifique.
+      tags:
+        - Clients
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID du client
+      responses:
+        '200':
+          description: Détails des dettes récupérés avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientDettes'
+        '404':
+          description: Client non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /clients/{id}/user:
+    get:
+      summary: Afficher l'utilisateur d'un client
+      description: Afficher l'utilisateur associé à un client spécifique.
+      tags:
+        - Clients
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID du client
+      responses:
+        '200':
+          description: Détails de l'utilisateur récupérés avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientUser'
+        '404':
+          description: Client non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'    
