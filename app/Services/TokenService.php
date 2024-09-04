@@ -26,7 +26,7 @@ class TokenService
      * @param User $user
      * @return array
      */
-    public function generateTokens(User $user)
+      public function generateTokens(User $user)
     {
         // Définir l'expiration du token
         $expiresAt = Carbon::now()->addSeconds(config('auth.personal_access_token_expiration', 60));
@@ -51,11 +51,11 @@ class TokenService
     
         return [
             'access_token' => $accessToken, // Retourner la chaîne du token
+            'access_token' => $accessToken, // Retourner la chaîne du token
             'refresh_token' => $refreshToken,
             'expires_at' => $expiresAt->toDateTimeString(),
         ];
     }
-    
 
     /**
      * Refresh the access token using a refresh token.
