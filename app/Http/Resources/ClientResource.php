@@ -23,8 +23,11 @@ class ClientResource extends JsonResource
             'dettes' =>  DetteResource::collection($this->whenLoaded('dettes')), // Relation conditionnelle
             'links' => [
                 'self' => route('clients.show', ['client' => $this->id]),
-                'edit' => route('clients.edit', ['client' => $this->id]),
+                'edit' => route('clients.update', ['client' => $this->id]),
             ],       
          ];
-    }
+    }   
+    
+
+    
 }

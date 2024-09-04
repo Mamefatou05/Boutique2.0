@@ -26,14 +26,17 @@ class StoreClientRequest extends FormRequest
     {
         return [
             'surname' => ['required', 'string', 'max:255', 'unique:clients,surname'],
-            'address' => ['nullable', 'string', 'max:255'],
+            'addresse' => ['nullable', 'string', 'max:255'],
             'telephone' => ['required', new TelephoneRule()],
+            'email' => [ 'string', 'email', 'max:255', 'unique:clients,email'],
             'user' => ['sometimes', 'array'],
             'user.nom' => ['required_with:user', 'string'],
             'user.prenom' => ['required_with:user', 'string'],
             'user.login' => ['required_with:user', 'string', 'unique:users,login'],
             // 'user.role' => ['required_with:user', 'in:' . implode(',', array_column(Role::cases(), 'value'))],
             'user.password' => ['required_with:user', new PasswordRule(), 'confirmed'],
+            'user.photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg'],
+ 
         ];
     }
 

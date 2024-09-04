@@ -11,6 +11,9 @@ use App\Policies\ArticlePolicy;
 use App\Policies\AuthPolicy;
 use App\Policies\ClientPolicy;
 use App\Policies\UserPolicy;
+use App\Services\AuthentificationPassport;
+use App\Services\AuthentificationServiceInterface;
+use App\Services\TokenService;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -20,7 +23,6 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        'App\Models\Model' => 'App\Policies\ModelPolicy', 
         Client::class => ClientPolicy::class,
         Article::class => ArticlePolicy::class,
         User::class => UserPolicy::class,
@@ -28,6 +30,14 @@ class AuthServiceProvider extends ServiceProvider
 
 
     ];
+    public function register()
+    {
+        $this->app->bind(AuthentificationServiceInterface ::class, function ($app) {
+            $tokenService = $app->make(TokenService ::class);
+            return new AuthentificationPassport($tokenService);
+        });
+    }
+
 
     /**
      * Register any authentication / authorization services.

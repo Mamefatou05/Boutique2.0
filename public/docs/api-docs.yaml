@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: API de Gestion des Articles
   version: 1.0.0
-  description: Documentation de l'API pour la gestion des articles, des utilisateurs, et de l'authentification
+  description: Documentation de l'API pour la gestion des articles, des utilisateurs, des clients , des dettes et leur paiement et de l'authentification
 
 servers:
   - url: http://localhost:3000/wane/v1
@@ -215,6 +215,9 @@ components:
 paths:
   /register:
     post:
+      security:
+        - BearerAuth: []
+
       summary: Inscrire un nouvel utilisateur
       operationId: registerUser
       tags:
@@ -260,6 +263,8 @@ paths:
 
   /users:
     get:
+      security:
+        - BearerAuth: []
       summary: Liste tous les utilisateurs
       tags:
         - Users
@@ -293,6 +298,8 @@ paths:
         '500':
           description: Erreur serveur
     post:
+      security:
+        - BearerAuth: []
       summary: Crée un nouvel utilisateur
       tags:
         - Users
@@ -330,6 +337,8 @@ paths:
 
   /users/{id}:
     get:
+      security:
+        - BearerAuth: []
       summary: Affiche un utilisateur spécifique
       tags:
         - Users
@@ -350,6 +359,8 @@ paths:
         '404':
           description: Utilisateur non trouvé
     put:
+      security:
+        - BearerAuth: []
       summary: Met à jour un utilisateur existant
       tags:
         - Users
@@ -385,6 +396,8 @@ paths:
         '422':
           description: Erreur de validation
     delete:
+      security:
+        - BearerAuth: []
       summary: Supprime un utilisateur
       tags:
         - Users
@@ -404,12 +417,12 @@ paths:
 
   /articles:
     get:
+      security:
+        - BearerAuth: []
       summary: Afficher la liste des articles
       operationId: getArticles
       tags:
         - Articles
-      security:
-        - BearerAuth: []
       parameters:
         - in: query
           name: page
@@ -448,12 +461,12 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
 
     post:
+      security:
+        - BearerAuth: []
       summary: Créer un nouvel article
       operationId: createArticle
       tags:
         - Articles
-      security:
-        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -472,12 +485,12 @@ paths:
 
   /articles/{id}:
     get:
+      security:
+        - BearerAuth: []
       summary: Afficher un article spécifique
       operationId: getArticle
       tags:
         - Articles
-      security:
-        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -498,12 +511,12 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
 
     put:
+      security:
+        - BearerAuth: []
       summary: Mettre à jour un article spécifique
       operationId: updateArticle
       tags:
         - Articles
-      security:
-        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -530,12 +543,12 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
 
     delete:
+      security:
+        - BearerAuth: []
       summary: Supprimer un article spécifique (SoftDelete)
       operationId: deleteArticle
       tags:
         - Articles
-      security:
-        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -553,12 +566,12 @@ paths:
 
   /articles/update-stock:
     post:
+      security:
+        - BearerAuth: []
       summary: Mettre à jour la quantité en stock de plusieurs articles
       operationId: updateStock
       tags:
         - Articles
-      security:
-        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -592,6 +605,8 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
   /clients:
     get:
+      security:
+        - BearerAuth: []
       summary: Lister les clients
       description: Lister les clients avec filtrage, tri et pagination.
       tags:
@@ -626,6 +641,8 @@ paths:
                   $ref: '#/components/schemas/Client'
 
     post:
+      security:
+        - BearerAuth: []
       summary: Créer un nouveau client
       description: Créer un nouveau client avec les informations fournies.
       tags:
@@ -652,6 +669,8 @@ paths:
 
   /clients/{id}:
     get:
+      security:
+        - BearerAuth: []
       summary: Afficher les détails d'un client
       description: Afficher les détails d'un client spécifique.
       tags:
@@ -677,6 +696,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
     put:
+      security:
+        - BearerAuth: []
       summary: Mettre à jour un client
       description: Mettre à jour les informations d'un client existant.
       tags:
@@ -715,6 +736,8 @@ paths:
                 $ref: '#/components/schemas/Error'
 
     delete:
+      security:
+        - BearerAuth: []
       summary: Supprimer un client
       description: Supprimer un client existant.
       tags:
@@ -745,6 +768,8 @@ paths:
 
   /clients/{id}/dettes:
     get:
+      security:
+        - BearerAuth: []
       summary: Afficher les dettes d'un client
       description: Afficher les dettes associées à un client spécifique.
       tags:
@@ -772,6 +797,8 @@ paths:
 
   /clients/{id}/user:
     get:
+      security:
+        - BearerAuth: []
       summary: Afficher l'utilisateur d'un client
       description: Afficher l'utilisateur associé à un client spécifique.
       tags:

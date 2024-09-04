@@ -7,14 +7,14 @@ use App\Services\TokenService;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Passport\Passport;
 
-class AppServiceProvider extends ServiceProvider
+class ExceptionProvider extends ServiceProvider
 {
     /**
      * Liste des repositories et services.
      */
     protected $repositories = [
-        'Article',
-        'Client',
+        'Repository',
+        'Service',
         // Ajoutez d'autres noms de repository ici
     ];
 

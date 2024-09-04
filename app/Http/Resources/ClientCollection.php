@@ -16,7 +16,7 @@ class ClientCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-            'data' => $this->collection->transform(function ($client) {
+            $this->collection->transform(function ($client) {
                 return new ClientResource($client);
             }),
             'links' => [

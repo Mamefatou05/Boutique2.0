@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\Filter;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +17,8 @@ class Client extends Model
         'adresse',
         'surname',
         'user_id',
+        'email',
+        'qr_code_base64'
     ];
 
     protected $hidden = [
@@ -33,6 +36,10 @@ class Client extends Model
         return $this->hasMany(Dette::class);
     }
 
+    public function scopeFilter($query, array $filters = [])
+    {
+        return $query->withGlobalScope('filter', new Filter($filters));
+    }
       // Scope pour filtrer les clients avec ou sans compte
       public function scopeCompte($query, $value)
       {

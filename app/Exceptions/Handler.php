@@ -71,6 +71,7 @@ class Handler extends ExceptionHandler
             );
         }
 
+
         // Handle not found HTTP exceptions
         if ($exception instanceof NotFoundHttpException) {
             return SendResponse::jsonResponse(
@@ -90,6 +91,30 @@ class Handler extends ExceptionHandler
                 'Method not allowed'
             );
         }
+
+        // Handle OAuth server exceptions
+        if ($exception instanceof OAuthServerException) {
+            return SendResponse::jsonResponse(
+                null,
+                $exception->getHttpStatusCode(),
+                StatutEnum::FAILURE,
+                $exception->getMessage()
+            );
+        }
+        if ($exception instanceof RepositoryException) {
+            return response([
+                'status' => $exception->getCode(),
+                'success' => 'failure',
+                'message' => $exception->getMessage(),
+                'data' => $exception->getContext(),
+            ], $exception->getCode());
+        }
+
+        
+
+
+        // Handle other exceptions
+
         
         // Handle other exceptions
         return SendResponse::jsonResponse(

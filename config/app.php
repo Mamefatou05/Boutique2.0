@@ -188,6 +188,11 @@ return [
     */
 
     'aliases' => Facade::defaultAliases()->merge([
+        'ClientService' => App\Facades\ClientServiceFacade::class,
+        'ClientRepository' => App\Facades\ClientRepositoryFacade::class,
+
+
+
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
 

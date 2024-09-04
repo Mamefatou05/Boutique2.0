@@ -41,11 +41,14 @@ Route::post('logout', [AuthController::class, 'logout']);
 });
 
 Route::middleware(['auth:api'])->prefix('/v1')->group(function () {
-    Route::resource('clients', ClientController::class);
+    Route::Apiresource('clients', ClientController::class);
+    Route::get('clients/{id}', [ClientController::class, 'Find'])->name('clients.find');
     Route::get('clients/{id}/dettes', [ClientController::class, 'showDettes'])->name('clients.showDettes');
     Route::get('clients/{id}/user', [ClientController::class, 'showUser'])->name('clients.showUser');
-
+    Route::post('clients/telephone', [ClientController::class, 'showByTel'])->name('clients.showByTel');
 });
+
+
 Route::middleware([  'auth:api',])->prefix('/v1')->group(function () {
     Route::resource('users', UserController::class);
     Route::get('register', [UserController::class,'register'])->name('users.register');
@@ -58,6 +61,6 @@ Route::middleware([  'auth:api',])->prefix('/v1')->group(function () {
 Route::middleware([ 'auth:api'])->prefix('v1')->group(function () {
     Route::apiResource('articles', ArticleController::class);
     Route::post('articles/stock', [ArticleController::class, 'updateStock']);
-    Route::post('articles/libelle', [ArticleController::class, 'searchByLibelle']);
+    Route::post('articles/libelle', [ArticleController::class, 'findByLibelle']);
 
 });

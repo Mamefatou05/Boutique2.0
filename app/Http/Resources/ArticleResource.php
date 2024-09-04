@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class ArticleResource extends JsonResource
 {
@@ -34,10 +35,16 @@ class ArticleResource extends JsonResource
      */
     public function with($request): array
     {
-        return [
-            'meta' => [
-                'total_articles' => $this->collection->count(),
-            ],
-        ];
+        if ($this->resource instanceof ResourceCollection) {
+            return [
+                'meta' => [
+                    'total_articles' => $this->collection->count(),
+                ],
+            ];
+        }
+    
+        // Retourner un tableau vide si ce n'est pas une collection
+        return [];
     }
+    
 }

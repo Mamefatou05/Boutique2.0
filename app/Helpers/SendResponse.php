@@ -28,8 +28,9 @@ class SendResponse
             'status' => $status,
             'success' => $statusType->value, // Enum value
             'message' => $message,
-            'data' => $data,
+            'response' => $data,
         ];
+       
 
         if ($link !== null) {
             $responseArray['link'] = $link;

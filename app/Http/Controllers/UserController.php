@@ -12,7 +12,6 @@ use App\Http\Resources\UserResource;
 use App\Models\Client;
 use App\Models\User;
 use App\Models\Role as ModelsRole;
-
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -98,6 +97,7 @@ class UserController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Ajout de la validation pour la photo
+          
         ]);
     
         if ($validator->fails()) {
@@ -125,6 +125,7 @@ class UserController extends Controller
                 'password' => $request->input('password'),
                 'role_id' => $role->id,
                 'photo' => $photoPath, // Sauvegarde du chemin de la photo dans la base de données
+                'active' => false
             ]);
     
             Log::info('Created User:', $user->toArray());
