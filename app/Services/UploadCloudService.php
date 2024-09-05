@@ -4,18 +4,20 @@ namespace App\Services;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
-class UploadService
+class UploadCloudService
 {
     public function uploadFile($file, $directory = 'uploads')
     {
         if ($file) {
             $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-            $path = Storage::disk('s3')->putFileAs($directory, $file, $filename);
+            $path = $directory . '/' . $filename;
+            Storage::disk('s3')->put($path, file_get_contents($file));
             $url = Storage::disk('s3')->url($path);
-            return $url; // Return the URL to store in the database
+            return $url;
         }
         return null;
     }
+    
 
     public function saveImageAsBase64($file)
     {

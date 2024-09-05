@@ -4,7 +4,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Mail\Mailable;
 
-class UserQrCodeEmail extends Mailable
+class QrCodeEmailService extends Mailable implements QrCodeEmailInterface
 {
     public $qrCodeBase64;
 

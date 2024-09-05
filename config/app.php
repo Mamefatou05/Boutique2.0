@@ -174,6 +174,9 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         App\Providers\TelescopeServiceProvider::class,
+        App\Providers\YamlInterfaceProvider::class,
+ 
+
     ])->toArray(),
 
     /*
@@ -190,6 +193,9 @@ return [
     'aliases' => Facade::defaultAliases()->merge([
         'ClientService' => App\Facades\ClientServiceFacade::class,
         'ClientRepository' => App\Facades\ClientRepositoryFacade::class,
+        'UserRepository' => App\Facades\UserRepositoryFacade::class,
+
+
 
 
 

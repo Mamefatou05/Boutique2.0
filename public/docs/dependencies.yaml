@@ -1,0 +1,20 @@
+App\Repositories\ArticleRepositoryInterface: 
+  default: App\Repositories\ArticleRepository
+
+App\Repositories\ClientRepositoryInterface: 
+  default: App\Repositories\ClientRepository
+
+App\Repositories\UserRepositoryInterface: 
+  default: App\Repositories\UserRepository
+
+App\Services\ArticleServiceInterface: 
+  default: App\Services\ArticleService
+
+App\Services\ClientServiceInterface: 
+  default: App\Services\ClientService
+
+App\Services\UserServiceInterface: 
+  default: App\Services\UserService
+
+App\Services\UploadServiceInterface: 
+  default: App\Services\UploadService

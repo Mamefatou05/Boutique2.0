@@ -33,7 +33,7 @@ class ExceptionProvider extends ServiceProvider
     protected function bindRepository($name)
     {
         $this->app->bind(
-            "App\\Repositories\\{$name}RepositoryInterface",
+            "App\\Repositories\\{$name}ExeptionInterface",
             "App\\Repositories\\{$name}Repository"
         );
     }
@@ -43,7 +43,7 @@ class ExceptionProvider extends ServiceProvider
     $this->app->singleton(
         "App\\Services\\{$name}Service",
         function ($app) use ($name) {
-            $repositoryInterface = "App\\Repositories\\{$name}RepositoryInterface";
+            $repositoryInterface = "App\\Repositories\\{$name}ExcInterface";
             $serviceClass = "App\\Services\\{$name}Service";
             return new $serviceClass($app->make($repositoryInterface));
         }

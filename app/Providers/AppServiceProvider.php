@@ -15,6 +15,8 @@ class AppServiceProvider extends ServiceProvider
     protected $repositories = [
         'Article',
         'Client',
+        'User',
+        // Ajoutez d'autres noms de service ici
         // Ajoutez d'autres noms de repository ici
     ];
 

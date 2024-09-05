@@ -3,9 +3,13 @@
 namespace App\Services;
 
 use App\Facades\ClientRepositoryFacade as ClientRepository;
+use App\Facades\UserRepositoryFacade as UserRepository;
+
+use App\Models\Role as RoleModel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use App\Repositories\ClientRepositoryInterface;
+use Illuminate\Support\Facades\Mail;
 
 class ClientService implements ClientServiceInterface
 {
@@ -15,6 +19,12 @@ class ClientService implements ClientServiceInterface
 
     // public function __construct(ClientRepositoryInterface $clientRepository){
     //     $this->clientRepository = $clientRepository;
+    // }
+    // protected $uploadService;
+
+    // public function __construct(UploadServiceInterface $uploadService)
+    // {
+    //     $this->uploadService = $uploadService;
     // }
 
     
@@ -72,11 +82,52 @@ class ClientService implements ClientServiceInterface
     
     public function createClient($data)
     {
+        $uploadService = new UploadService;
+
         DB::beginTransaction();
         try {
-            $client = ClientRepository::createClient($data);
+            // Générer le QR code
+            $qrCodeBase64 = $uploadService->generateQRCode($data['telephone']);
+            $user = null;
+
+            // Créer l'utilisateur si les données sont fournies
+            if (isset($data['user'])) {
+                $userData = $data['user'];
+                $role = RoleModel::firstOrCreate(['name' => 'CLIENT']);
+                $photoBase64 = $uploadService->saveImageAsBase64($userData['photo']);
+                
+                $user = UserRepository::createUser([
+                    'nom' => $userData['nom'],
+                    'prenom' => $userData['prenom'],
+                    'login' => $userData['login'],
+                    'password' =>$userData['password'],
+                    'role_id' => $role->id,
+                    'photo' => $photoBase64
+                ]);
+            }
+
+            // Créer le client via le repository
+            $clientData = [
+                'adresse' => $data['addresse'],
+                'telephone' => $data['telephone'],
+                'surname' => $data['surname'],
+                'email' => $data['email'],
+                'qr_code_base64' => $qrCodeBase64
+            ];
+
+            $client = ClientRepository::createClient($clientData);
+
+            // Associer l'utilisateur au client si créé
+            if ($user) {
+                $client->user()->associate($user);
+                $client->save();  // Sauvegarder les modifications de l'association
+            }
+
+            Mail::to($data['email'])->send(new QrCodeEmailService($qrCodeBase64));
+
             DB::commit();
             return $client;
+
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;

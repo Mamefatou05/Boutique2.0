@@ -11,5 +11,7 @@ interface UploadServiceInterface
     public function saveImageAsBase64($file);
 
     public function isImage($file);
+
+    public function generateQRCode($data);
    
 }
