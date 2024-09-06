@@ -7,16 +7,21 @@ use \SimpleSoftwareIO\QrCode\Facades\QrCode  as QrCode;
 
 class UploadService
 {
-    public function uploadFile($file, $directory = 'uploads')
+    public function uploadFile($file, $directory = 'images')
     {
-        
         if ($file) {
+            // Générer un nom unique pour le fichier
             $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+    
+            // Stocker le fichier dans 'public/images' sur le disque 'public'
             $path = $file->storeAs($directory, $filename, 'public');
-            return $path;
+
+    
+            return $path;  // Le chemin sera 'images/nom_du_fichier.ext'
         }
         return null;
     }
+    
 
     public function saveImageAsBase64($file)
     {
@@ -37,5 +42,9 @@ class UploadService
     {
         $qrCode = QrCode::format('png')->size(200)->generate($data);
         return base64_encode($qrCode);
+    }
+    public function deleteFile($path)
+    {
+        Storage::delete($path);  // Supprime le fichier sur le disque
     }
 }

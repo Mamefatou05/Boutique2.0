@@ -19,15 +19,13 @@ class ClientResource extends JsonResource
             'surname' => $this->surname,
             'telephone' => $this->telephone,
             'adresse' => $this->adresse,
+            'photo' => $this->photo, // Attribut virtuel 'photo'
             'user' => new UserResource($this->whenLoaded('user')),
             'dettes' =>  DetteResource::collection($this->whenLoaded('dettes')), // Relation conditionnelle
             'links' => [
-                'self' => route('clients.show', ['client' => $this->id]),
-                'edit' => route('clients.update', ['client' => $this->id]),
-            ],       
-         ];
-    }   
-    
+                'self' => route('clients.Find', ['id' => $this->id]),
+            ],
 
-    
+        ];
+    }
 }

@@ -2,19 +2,38 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Storage;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Support\Facades\Log;
+use Psr\Http\Message\UploadedFileInterface;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
-class UploadCloudService
+class UploadCloudService implements UploadServiceInterface
 {
-    public function uploadFile($file, $directory = 'uploads')
+
+    
+
+    public function uploadFile($file)
     {
         if ($file) {
-            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-            $path = $directory . '/' . $filename;
-            Storage::disk('s3')->put($path, file_get_contents($file));
-            $url = Storage::disk('s3')->url($path);
-            return $url;
+            Log::debug("Uploading file - File found: " . $file->getClientOriginalName());
+            
+            try {
+                $uploadResponse = Cloudinary::upload($file->getRealPath(), [
+                    'folder' => 'images',
+                ]);
+    
+                $uploadedFileUrl = $uploadResponse->getSecurePath();
+    
+                Log::info("File uploaded successfully", ['url' => $uploadedFileUrl]);
+    
+                return $uploadedFileUrl;
+            } catch (\Exception $e) {
+                Log::error("File upload failed", ['error' => $e->getMessage()]);
+                return null;
+            }
         }
+    
+        Log::warning("No file provided for upload");
         return null;
     }
     
@@ -28,7 +47,8 @@ class UploadCloudService
         return null;
     }
 
-    private function isImage($file)
+    public function isImage($file)
+
     {
         return in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'image/gif']);
     }
@@ -37,5 +57,9 @@ class UploadCloudService
     {
         $qrCode = QrCode::format('png')->size(200)->generate($data);
         return base64_encode($qrCode);
+    }
+    public function deleteFile($publicId)
+    {
+        Cloudinary::destroy($publicId);  // Supprime le fichier sur Cloudinary
     }
 }

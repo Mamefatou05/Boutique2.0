@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\Role;
+use App\Events\PhotoEvent;
+use App\Events\SendQrCodeEmailEvent;
 use App\Facades\ClientRepositoryFacade as ClientRepository;
 use App\Facades\UserRepositoryFacade as UserRepository;
-
+use App\Models\Client;
 use App\Models\Role as RoleModel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
@@ -14,7 +17,7 @@ use Illuminate\Support\Facades\Mail;
 class ClientService implements ClientServiceInterface
 {
 
-// protected $clientRepository;
+    // protected $clientRepository;
 
 
     // public function __construct(ClientRepositoryInterface $clientRepository){
@@ -27,7 +30,7 @@ class ClientService implements ClientServiceInterface
     //     $this->uploadService = $uploadService;
     // }
 
-    
+
 
 
     public function getAllClients($request)
@@ -41,14 +44,13 @@ class ClientService implements ClientServiceInterface
                 'surname' => $request->input('surname'),
                 'email' => $request->input('email'),
                 'compte' => $request->input('compte'),
-               
-            ];
-           
-           $CLient = ClientRepository::getAllClients($filters)->paginate(10);
 
-        return $CLient;       
-     });
-            
+            ];
+
+            $CLient = ClientRepository::getAllClients($filters)->paginate(10);
+
+            return $CLient;
+        });
     }
 
     public function getClientById($id, array $relations = [])
@@ -65,70 +67,61 @@ class ClientService implements ClientServiceInterface
         $telephone = $request->input('telephone');
 
         $cacheKey = "client_by_telephone_{$telephone}";
-    
+
         return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($telephone) {
 
             $filters = [
                 'telephone' => $telephone
             ];
-            $client = ClientRepository::getAllClients($filters)->first(); 
+            $client = ClientRepository::getAllClients($filters)->first();
 
-          return $client; 
-        }); 
+            return $client;
+        });
     }
-    
-    
-    
-    
+
+
+
+
     public function createClient($data)
     {
-        $uploadService = new UploadService;
+        // Instancier le service pour gérer l'upload et le QR code
+        $uploadService = new UploadCloudService;
 
         DB::beginTransaction();
         try {
-            // Générer le QR code
+            // Générer le QR code sous forme de base64 à partir du numéro de téléphone
             $qrCodeBase64 = $uploadService->generateQRCode($data['telephone']);
             $user = null;
 
-            // Créer l'utilisateur si les données sont fournies
+            // Créer l'utilisateur si les données utilisateur sont fournies
             if (isset($data['user'])) {
                 $userData = $data['user'];
-                $role = RoleModel::firstOrCreate(['name' => 'CLIENT']);
-                $photoBase64 = $uploadService->saveImageAsBase64($userData['photo']);
-                
-                $user = UserRepository::createUser([
-                    'nom' => $userData['nom'],
-                    'prenom' => $userData['prenom'],
-                    'login' => $userData['login'],
-                    'password' =>$userData['password'],
-                    'role_id' => $role->id,
-                    'photo' => $photoBase64
-                ]);
+                // Créer l'utilisateur dans la base de données (l'Observer gère l'upload de la photo)
+                $user = UserRepository::createUser($userData);
             }
 
-            // Créer le client via le repository
-            $clientData = [
+            $client = new Client();
+            $client->fill([
                 'adresse' => $data['addresse'],
                 'telephone' => $data['telephone'],
                 'surname' => $data['surname'],
                 'email' => $data['email'],
                 'qr_code_base64' => $qrCodeBase64
-            ];
+            ]);
 
-            $client = ClientRepository::createClient($clientData);
 
-            // Associer l'utilisateur au client si créé
-            if ($user) {
-                $client->user()->associate($user);
-                $client->save();  // Sauvegarder les modifications de l'association
-            }
+            // Si l'utilisateur est créé, l'associer au client avant de sauvegarder
+            $client->user()->associate($user ?? null);
 
-            Mail::to($data['email'])->send(new QrCodeEmailService($qrCodeBase64));
+            // Sauvegarder le client dans la base de données (avec ou sans utilisateur associé)
+            $client->save();
+            // Déclencher l'événement pour envoyer un email avec le QR Code
+            event(new SendQrCodeEmailEvent($client, $user));
 
             DB::commit();
             return $client;
-
         } catch (\Exception $e) {
+            // En cas d'échec, annuler la transaction
             DB::rollBack();
             throw $e;
         }

@@ -175,6 +175,8 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\TelescopeServiceProvider::class,
         App\Providers\YamlInterfaceProvider::class,
+        Barryvdh\DomPDF\ServiceProvider::class,
+
  
 
     ])->toArray(),
@@ -194,6 +196,7 @@ return [
         'ClientService' => App\Facades\ClientServiceFacade::class,
         'ClientRepository' => App\Facades\ClientRepositoryFacade::class,
         'UserRepository' => App\Facades\UserRepositoryFacade::class,
+        'PDF' =>Barryvdh\DomPDF\PDF::class,
 
 
 

@@ -27,10 +27,10 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class UserController extends Controller
 {
-    public function __construct()
-    {
-        $this->authorizeResource(User::class, 'user');
-    }
+    // public function __construct()
+    // {
+    //     $this->authorizeResource(User::class, 'user');
+    // }
 
 
     
@@ -83,8 +83,9 @@ class UserController extends Controller
             'update' => route('users.update', ['user' => $user->id]),
             'delete' => route('users.destroy', ['user' => $user->id]),
         ];
+        $return = new UserResource($user) ;
 
-        return $this->jsonResponse($user, 200, 'User retrieved successfully', $user->links);
+        return $this->jsonResponse( $return, 200, 'User retrieved successfully', $user->links);
     }
 
     // Crée un nouvel utilisateur

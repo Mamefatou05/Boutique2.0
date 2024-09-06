@@ -42,7 +42,7 @@ Route::post('logout', [AuthController::class, 'logout']);
 
 Route::middleware(['auth:api'])->prefix('/v1')->group(function () {
     Route::Apiresource('clients', ClientController::class);
-    Route::get('clients/{id}', [ClientController::class, 'Find'])->name('clients.find');
+    Route::get('client/{id}', [ClientController::class, 'Find'])->name('clients.Find');
     Route::get('clients/{id}/dettes', [ClientController::class, 'showDettes'])->name('clients.showDettes');
     Route::get('clients/{id}/user', [ClientController::class, 'showUser'])->name('clients.showUser');
     Route::post('clients/telephone', [ClientController::class, 'showByTel'])->name('clients.showByTel');

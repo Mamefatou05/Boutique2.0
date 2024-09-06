@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Storage;
 
 interface UploadServiceInterface 
 {
-    public function uploadFile($file, $directory);
+    public function uploadFile($file);
     
     public function saveImageAsBase64($file);
 

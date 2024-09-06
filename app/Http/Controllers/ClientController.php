@@ -28,12 +28,8 @@ class ClientController extends Controller
     {
         $client = ClientServiceFacade::getClientById($id);
         $this->authorize('viewOne', $client);
-
-        
-    
         return new ClientResource($client);
     }
-    
     
 
     public function store(StoreClientRequest $request)
@@ -65,7 +61,7 @@ class ClientController extends Controller
         // Appel explicite à la méthode de politique
         $this->authorize('viewUser', $client);
 
-        return $client;
+       return new ClientResource ($client);
     }
 
     public function showByTel(Request $request)

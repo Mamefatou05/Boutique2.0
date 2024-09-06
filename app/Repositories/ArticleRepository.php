@@ -3,10 +3,7 @@ namespace App\Repositories;
 
 use App\Models\Article;
 use App\Exceptions\RepositoryException;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Database\QueryException;
-use Exception;
+
 
 class ArticleRepository implements ArticleRepositoryInterface
 {
@@ -25,7 +22,7 @@ class ArticleRepository implements ArticleRepositoryInterface
                     'page',
                     $request->input('page', 1)
                 );
-        } catch (Exception $e) {
+        } catch (RepositoryException $e) {
             throw new RepositoryException('Failed to retrieve articles', 422, ['error' => $e->getMessage()]);
         }
     }
@@ -36,7 +33,7 @@ class ArticleRepository implements ArticleRepositoryInterface
             return Article::withTrashed()
                 ->where('id', $id)
                 ->firstOrFail();
-        } catch (QueryException $e) {
+        } catch (RepositoryException $e) {
             throw new RepositoryException('Article not found', 422, ['id' => $id]);
         }
     }
@@ -47,7 +44,7 @@ class ArticleRepository implements ArticleRepositoryInterface
             return Article::withTrashed()
                 ->where('id', $id)
                 ->restore();
-        } catch (QueryException $e) {
+        } catch (RepositoryException $e) {
             throw new RepositoryException('Failed to restore article', 422, ['id' => $id, 'error' => $e->getMessage()]);
         }
     }
@@ -56,7 +53,7 @@ class ArticleRepository implements ArticleRepositoryInterface
     {
         try {
             return Article::where('name', 'LIKE', '%' . $libelle . '%')->firstOrFail();
-        } catch (ModelNotFoundException $e) {
+        } catch (RepositoryException $e) {
             throw new RepositoryException('Article not found', 422, ['libelle' => $libelle]);
         }
     }
@@ -65,7 +62,7 @@ class ArticleRepository implements ArticleRepositoryInterface
     {
         try {
             return Article::create($data);
-        } catch (QueryException $e) {
+        } catch (RepositoryException $e) {
             throw new RepositoryException('Failed to create article', 500, ['data' => $data, 'error' => $e->getMessage()]);
         }
     }
@@ -85,7 +82,7 @@ class ArticleRepository implements ArticleRepositoryInterface
             $article->save();
 
             return $article;
-        } catch (Exception $e) {
+        } catch (RepositoryException $e) {
             throw new RepositoryException('Failed to update article', 500, ['id' => $article->id, 'data' => $data, 'error' => $e->getMessage()]);
         }
     }
@@ -94,7 +91,7 @@ class ArticleRepository implements ArticleRepositoryInterface
     {
         try {
             $article->delete();
-        } catch (Exception $e) {
+        } catch (RepositoryException $e) {
             throw new RepositoryException('Failed to delete article', 500, ['id' => $article->id, 'error' => $e->getMessage()]);
         }
     }
@@ -118,7 +115,7 @@ class ArticleRepository implements ArticleRepositoryInterface
                         $article->save();
 
                         $successfulUpdates[] = $article;
-                    } catch (Exception $e) {
+                    } catch (RepositoryException $e) {
                         $errors[] = [
                             'id' => $item['id'],
                             'message' => 'Failed to update article with ID ' . $item['id'] . ': ' . $e->getMessage()
@@ -131,7 +128,7 @@ class ArticleRepository implements ArticleRepositoryInterface
                     ];
                 }
             }
-        } catch (Exception $e) {
+        } catch (RepositoryException $e) {
             $errors[] = [
                 'message' => 'Error updating stock: ' . $e->getMessage()
             ];

@@ -9,8 +9,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 // use App\Facades\ScopeFilterFacade;
-use App\Models\Role as ModelsRole;
-
+use App\Models\Role;
+use Illuminate\Support\Facades\Log;
 
 class User extends Authenticatable
 {
@@ -21,7 +21,7 @@ class User extends Authenticatable
         'prenom',
         'login',
         'password',
-        'role',
+        'role_id',
         'photo'
     ];
 
@@ -46,14 +46,8 @@ class User extends Authenticatable
         return $query;
     }
 
-    public function scopeRole($query, $roleName)
-    {
-        // Récupérer l'ID du rôle en utilisant le nom du rôle
-        $roleId = ModelsRole::where('name', $roleName)->pluck('id')->first();
+
     
-        // Filtrer les utilisateurs en fonction de l'ID du rôle
-        return $query->where('role_id', $roleId);
-    }
     
 
     /**
@@ -66,10 +60,12 @@ class User extends Authenticatable
         return $this->hasOne(User::class, 'id', 'user_id');
     }
 
-    public function role(): BelongsTo
+    public function role()
     {
         return $this->belongsTo(Role::class);
     }
+    
+    
     // protected static function booted()
     // {
     //     static::addGlobalScope(ScopeFilterFacade::apply());

@@ -26,7 +26,17 @@ class Client extends Model
         'updated_at'
     ];
 
-  
+    public function getPhotoAttribute(): string
+    {
+        // Si le client a un utilisateur lié avec une photo
+        if ($this->user && $this->user->photo) {
+            return $this->user->photo;
+        }
+    
+        // Sinon, retourner l'image par défaut locale
+        return asset('images/default-avatar.png');
+    }
+    
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

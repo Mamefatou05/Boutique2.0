@@ -17,4 +17,12 @@ App\Services\UserServiceInterface:
   default: App\Services\UserService
 
 App\Services\UploadServiceInterface: 
-  default: App\Services\UploadService
+  default: App\Services\UploadCloudService
+  
+
+
+
+
+
+
+
